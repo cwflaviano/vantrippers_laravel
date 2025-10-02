@@ -13,48 +13,82 @@ Route::get('/user', function (Request $request) {
 
 # =======================================================================================================
 # Bearer Token Creation
+Route::post('register', [AuthenticationController::class, 'register']); // create user for api access
+Route::post('login', [AuthenticationController::class, 'login']); // login to get access token per user
 
 # secure user routes
 Route::middleware('auth:sanctum')->group(function () {
-    # get all routes
+    # get all users with access token
     Route::get('user', [AuthenticationController::class, 'userInfo']);
     # logout user
     Route::post('logout', [AuthenticationController::class, 'logOut']);
-    // Route::apiResource('posts', PostController::class);
 });
 
 
 # =======================================================================================================
 # Terms routes
-/**
- * Get: https://domain/api/terms/get (JSON FORMAT) - will fetch all terms
- * Post: https://domain/api/terms/create (JSON FORMAT) - create new term
- * Post: https://domain/api/terms/edit (JSON FORMAT) - edit existing term
- * Delete: https://domain/api/terms/delete/{id} (URL) - delete existing term by ID
- */
 Route::middleware('auth:sanctum')
     ->prefix('terms')
     ->group(function(){
+        /**
+         * use http://domain/api/terms/get
+         * returns terms: id, category, details, created_at with success message
+         */
         Route::get('/get', [TermsController::class, 'getTerms']);
+
+        /**
+         * use http://domain/api/terms/create
+         * accepts JSON: category, details
+         * returns success message
+         */
         Route::post('/create', [TermsController::class, 'addTerms']);
+
+        /**
+         * use http://domain/api/terms/edit
+         * accepts JSON: id, category, details
+         * returns success message after updating term by id
+         */
         Route::post('/edit', [TermsController::class, 'editTerms']);
+
+        /**
+         * use http://domain/api/terms/delete/{id}
+         * accepts URL param: id
+         * returns success message after deleting term by id
+         */
         Route::delete('/delete/{id}', [TermsController::class, 'deleteTerms']);
     });
 
 
 # Packages routes
-/**
- * Get: https://domain/api/invoice-packages/get (JSON FORMAT) - will fetch all packages without filters
- * Post: https://domain/api/invoice-packages/create (JSON FORMAT) - create new invoice package
- * Post: https://domain/api/invoice-packages/edit (JSON FORMAT) - edit existing invoice package
- * Delete: https://domain/api/invoice-packages/delete/{id} (URL) - delete existing invoice package by ID
- */
 Route::middleware('auth:sanctum')
     ->prefix('invoice-packages')
     ->group(function() {
+        /**
+         * use http://domain/api/invoice-packages/get
+         * return unfiltered invoce packages
+         * return JSON: id, sku, quantiy, category, items, item_full_details, price, created_at
+         */
         Route::get('/get', [InvoicePackageController::class, 'getInvoicePackages']);
+
+        /**
+         * use http://domain/api/invoice-packages/create
+         * accepts JSON: sku, quantity, category, items, item_full_details, price
+         * returns success message with status code 201
+         */
         Route::post('/create', [InvoicePackageController::class, 'addInvoicePackage']);
+
+        /**
+         * use http://domain/api/invoice-packages/edit
+         * accepts JSON: id, sku, quantity, category, items, item_full_details, price
+         * creates invoice package and returns success message
+         */
         Route::post('/edit', [InvoicePackageController::class, 'editInvoicePackage']);
+
+        /**
+         * use http://domain/api/invoice-packages/delete/{id}
+         * accepts URL param: id
+         * returns success message after deleting invoice package by id
+         */
         Route::delete('/delete/{id}', [InvoicePackageController::class, 'deleteInvoicePackage']);
     });
 
@@ -106,6 +140,13 @@ Route::middleware('auth:sanctum')
          * returns sub-categories: status, message, messageType, subcategory
          */
         Route::post('/edit-sub-category', [ItinerariesController::class, 'editSubCategory']);
+
+        /**
+         * use http://domain/api/itineraries/delete-sub-category/{id}
+         * accepts URL param: id
+         * returns success message after deleting sub-category by id
+         */
+        Route::delete('/delete-itinerary/{id}', [ItinerariesController::class, 'deleteItinerary']);
     });
 
 

@@ -194,8 +194,14 @@ class ItinerariesController extends Controller
     // update existing itinerary(subcategory)
     public function editSubCategory(Request $request)
     {
+        if(empty($request->id)) {
+            return response()->json([
+                'status' => 'Null',
+                'message' => 'No Id provided'
+            ], 400);
+        }
         try {
-            $subCategory = SubCategories::find((int)$request->id);
+            $subCategory = SubCategories::find($request->id);
 
             if (!$subCategory) {
                 return response()->json([
@@ -227,4 +233,43 @@ class ItinerariesController extends Controller
             ], 500);
         }
     }   
+
+
+    // delete itinerary by param ID 
+    public function deleteItinerary(int $id) 
+    {
+        if(empty($id)) {
+            return response()->json([
+                'status' => 'Null',
+                'message' => 'No Id provided'
+            ], 400);
+        }
+
+        try {
+           $itinerary = SubCategories::find($id);
+           
+           if(!$itinerary) {
+                return response()->json([
+                    'status' => 'Not Found',
+                    'message' => 'No itinerary found'
+                ], 404);
+           }
+
+           $itinerary->delete();
+
+           return response()->json([
+                'status' => 'success',
+                'messageType' => 'success',
+                'message' => 'Itinerary deleted successfully'
+           ], 200);
+        }
+        catch(\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'messageType' => 'danger',
+                'message' => 'Failed to delete itinerary',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
