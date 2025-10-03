@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Events\Registered;
 
@@ -25,7 +26,7 @@ class AuthController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
+                'email' => 'required|string|email|max:255|unique:vantripper_db.users,email',
                 'password' => 'required|string|min:8|confirmed',
             ]);
 
@@ -37,17 +38,45 @@ class AuthController extends Controller
                 ], 422);
             }
 
+            // Split name into first_name and last_name for employee fields
+            $nameParts = explode(' ', $request->name, 2);
+            $firstName = $nameParts[0];
+            $lastName = $nameParts[1] ?? '';
+
+            // Generate unique emp_id
+            $lastEmpId = DB::connection('vantripper_db')->table('users')->max('id') ?? 0;
+            $empId = 'EMP_' . str_pad($lastEmpId + 1, 4, '0', STR_PAD_LEFT);
+
             // Create user with is_approved = false (requires admin approval)
+            // Include required employee fields with defaults
             $user = User::create([
+                'emp_id' => $empId,
                 'name' => $request->name,
+                'first_name' => $firstName,
+                'middle_name' => '',
+                'last_name' => $lastName,
+                'gender' => 'Other',
+                'address' => 'N/A',
+                'birthdate' => now()->subYears(18)->format('Y-m-d'), // Default to 18 years old
+                'age' => 18,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
+                'contact' => '00000000000',
+                'position' => 'Customer',
+                'date_of_joining' => now()->format('Y-m-d'),
+                'type_of_contract' => 'N/A',
+                'department_id' => 1, // Default department
+                'role_id' => 2, // Default role (not admin)
+                'status' => 1,
+                'user_delete' => 0,
+                'user_archived' => 0,
                 'is_approved' => false, // Requires admin approval
                 'is_admin' => false,
             ]);
 
-            // Trigger email verification
-            event(new Registered($user));
+            // Auto-verify email for API registrations (since we don't have email verification routes set up)
+            $user->email_verified_at = now();
+            $user->save();
 
             // Log registration event
             Log::info('New user registration', [
@@ -74,7 +103,8 @@ class AuthController extends Controller
             Log::error('Registration failed', [
                 'error' => $e->getMessage(),
                 'email' => $request->email ?? 'unknown',
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
