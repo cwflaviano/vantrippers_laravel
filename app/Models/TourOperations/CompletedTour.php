@@ -4,8 +4,6 @@ namespace App\Models\TourOperations;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\VantripperINV\Customer;
-use App\Models\VantripperINV\Invoice;
 
 class CompletedTour extends Model
 {
@@ -16,6 +14,7 @@ class CompletedTour extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id',
         'tour_id',
         'assigned_team',
         'followup_status',
@@ -41,16 +40,6 @@ class CompletedTour extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-
-    public function customer()
-    {
-        return $this->belongsTo(Customer::class, 'invoice_no', 'invoice_no');
-    }
-
-    public function invoice()
-    {
-        return $this->belongsTo(Invoice::class, 'invoice_no', 'invoice_no');
-    }
 
     public function scopeByTeam($query, $team)
     {
