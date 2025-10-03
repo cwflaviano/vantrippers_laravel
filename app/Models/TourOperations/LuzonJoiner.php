@@ -14,6 +14,7 @@ class LuzonJoiner extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id',
         'travel_dates',
         'destination',
         'days',
@@ -37,11 +38,27 @@ class LuzonJoiner extends Model
         'days' => 'integer',
         'pax' => 'integer',
         'balance' => 'decimal:2',
-        'booked_accommodation' => 'boolean',
-        'van_details_sent' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'booked_accommodation' => 'boolean',
+            'van_details_sent' => 'boolean',
+        ];
+    }
+
+    public function getBookedAccommodationAttribute($value)
+    {
+        return $value === 'YES';
+    }
+
+    public function getVanDetailsSentAttribute($value)
+    {
+        return $value === 'YES';
+    }
 
     public function scopeByDestination($query, $destination)
     {
