@@ -14,14 +14,14 @@ Route::get('/user', function (Request $request) {
 # =======================================================================================================
 # Bearer Token Creation
 Route::post('register', [AuthenticationController::class, 'register']); // create user for api access
-Route::post('login', [AuthenticationController::class, 'login']); // login to get access token per user
+Route::post('/login', [AuthenticationController::class, 'login']); // login to get access token per user
 
 # secure user routes
 Route::middleware('auth:sanctum')->group(function () {
     # get all users with access token
-    Route::get('user', [AuthenticationController::class, 'userInfo']);
+    Route::get('/user', [AuthenticationController::class, 'userInfo']);
     # logout user
-    Route::post('logout', [AuthenticationController::class, 'logOut']);
+    Route::post('/logout', [AuthenticationController::class, 'logOut']);
 });
 
 
@@ -64,11 +64,22 @@ Route::middleware('auth:sanctum')
     ->prefix('invoice-packages')
     ->group(function() {
         /**
+         * (use this if needed)
          * use http://domain/api/invoice-packages/get
          * return unfiltered invoce packages
          * return JSON: id, sku, quantiy, category, items, item_full_details, price, created_at
          */
-        Route::get('/get', [InvoicePackageController::class, 'getInvoicePackages']);
+        # Route::get('/get', [InvoicePackageController::class, 'getInvoicePackages']);
+
+        /**
+         * Examples:
+         *  use http://domain/api/invoice-packages/fetch?per_page=10&page=1 - using pagination only
+         *  use http://domain/api/invoice-packages/fetch?search=ILOCOS - using search
+         *  use http://domain/api/invoice-packages/fetch?sortBy=price&sortDir=desc - using sorting
+         *  use http://domain/api/invoice-packages/fetch?per_page=10&page=1&sortBy=price&sortDir=desc&search=ILOCOS - using all feature
+         * returns paginated invoice packages
+         */
+        Route::get('/fetch', [InvoicePackageController::class, 'paginatedInvoicePackages']);
 
         /**
          * use http://domain/api/invoice-packages/create

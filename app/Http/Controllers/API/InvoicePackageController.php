@@ -18,6 +18,42 @@ class InvoicePackageController extends Controller
         ]);
     }
 
+    # fetch invoice pacakges with pagination
+    public function paginatedInvoicePackages(Request $request) 
+    {
+        $query = Invoice_Packages::query();
+        
+        if($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('sku', 'LIKE', "%{$search}%")
+                  ->orWhere('category', 'LIKE', "%{$search}%")
+                  ->orWhere('items', 'LIKE', "%{$search}%")
+                  ->orWhere('price', 'LIKE', "%{$search}%")
+                  ->orWhere('created_at', 'LIKE', "%{$search}%")
+                  ->orWhere('id', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $sortBy = $request->get('sortBy', 'created_at');
+        $sortDir = $request->get('sortDir', 'desc');
+        $query->orderBy($sortBy, $sortDir);
+
+        $perPage = $request->get('per_page', 10);
+        $invoicePackages = $query->paginate($perPage);
+
+        return response()->json([
+            'status' => 'success',
+            'packages' => $invoicePackages->items(),    
+            'pagination' => [
+                'total' => $invoicePackages->total(),
+                'per_page' => $invoicePackages->perPage(),
+                'current_page' => $invoicePackages->currentPage(),
+                'last_page' => $invoicePackages->lastPage()
+            ]
+        ]);
+    }
+
     # add and create new invoic package and store in database
     public function addInvoicePackage(Request $request) 
     {
