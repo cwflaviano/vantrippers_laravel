@@ -130,8 +130,8 @@ class LuzonJoinerController extends Controller
                 'payment_status' => 'required|in:Partially Paid,Fully Paid',
                 'accommodation' => 'nullable|string|max:255',
                 'room_setup' => 'nullable|string|max:255',
-                'booked_accommodation' => 'nullable|boolean',
-                'van_details_sent' => 'nullable|boolean',
+                'booked_accommodation' => 'nullable',
+                'van_details_sent' => 'nullable',
                 'assigned_team' => 'nullable|string|max:255',
                 'status' => 'required|string|max:50',
                 'notes' => 'nullable|string'
@@ -145,7 +145,28 @@ class LuzonJoinerController extends Controller
                 ], 422);
             }
 
-            $tour = LuzonJoiner::create($validator->validated());
+            // Get max ID and add 1 (id field doesn't have AUTO_INCREMENT)
+            $maxId = LuzonJoiner::max('id') ?? 0;
+            $data = array_merge(['id' => $maxId + 1], $validator->validated());
+
+            // Convert boolean values to YES/NO for database ENUM fields
+            if (isset($data['booked_accommodation'])) {
+                if ($data['booked_accommodation'] === 'YES' || $data['booked_accommodation'] === 'NO') {
+                    // Already in correct format
+                } else {
+                    $data['booked_accommodation'] = in_array($data['booked_accommodation'], [true, 1, '1', 'true'], true) ? 'YES' : 'NO';
+                }
+            }
+            if (isset($data['van_details_sent'])) {
+                if ($data['van_details_sent'] === 'YES' || $data['van_details_sent'] === 'NO') {
+                    // Already in correct format
+                } else {
+                    $data['van_details_sent'] = in_array($data['van_details_sent'], [true, 1, '1', 'true'], true) ? 'YES' : 'NO';
+                }
+            }
+
+            $tour = LuzonJoiner::create($data);
+            $tour = LuzonJoiner::find($data['id']);
 
             return response()->json([
                 'success' => true,
@@ -212,8 +233,8 @@ class LuzonJoinerController extends Controller
                 'payment_status' => 'sometimes|required|in:Partially Paid,Fully Paid',
                 'accommodation' => 'nullable|string|max:255',
                 'room_setup' => 'nullable|string|max:255',
-                'booked_accommodation' => 'nullable|boolean',
-                'van_details_sent' => 'nullable|boolean',
+                'booked_accommodation' => 'nullable',
+                'van_details_sent' => 'nullable',
                 'assigned_team' => 'nullable|string|max:255',
                 'status' => 'sometimes|required|string|max:50',
                 'notes' => 'nullable|string'
@@ -227,7 +248,25 @@ class LuzonJoinerController extends Controller
                 ], 422);
             }
 
-            $tour->update($validator->validated());
+            $data = $validator->validated();
+
+            // Convert boolean values to YES/NO for database ENUM fields
+            if (isset($data['booked_accommodation'])) {
+                if ($data['booked_accommodation'] === 'YES' || $data['booked_accommodation'] === 'NO') {
+                    // Already in correct format
+                } else {
+                    $data['booked_accommodation'] = in_array($data['booked_accommodation'], [true, 1, '1', 'true'], true) ? 'YES' : 'NO';
+                }
+            }
+            if (isset($data['van_details_sent'])) {
+                if ($data['van_details_sent'] === 'YES' || $data['van_details_sent'] === 'NO') {
+                    // Already in correct format
+                } else {
+                    $data['van_details_sent'] = in_array($data['van_details_sent'], [true, 1, '1', 'true'], true) ? 'YES' : 'NO';
+                }
+            }
+
+            $tour->update($data);
 
             return response()->json([
                 'success' => true,
