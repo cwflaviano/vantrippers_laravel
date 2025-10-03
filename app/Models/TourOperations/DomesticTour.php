@@ -14,6 +14,7 @@ class DomesticTour extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id',
         'travel_dates',
         'destination',
         'days',
@@ -37,13 +38,24 @@ class DomesticTour extends Model
         'days' => 'integer',
         'pax' => 'integer',
         'balance' => 'decimal:2',
-        'hotel_balance' => 'decimal:2',
-        'booked_accommodation' => 'boolean',
-        'coordinated_with_supplier' => 'boolean',
-        'transfer_details_sent' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    public function getBookedAccommodationAttribute($value)
+    {
+        return $value === 'YES';
+    }
+
+    public function getCoordinatedWithSupplierAttribute($value)
+    {
+        return $value === 'YES';
+    }
+
+    public function getTransferDetailsSentAttribute($value)
+    {
+        return $value === 'YES';
+    }
 
     public function scopeByDestination($query, $destination)
     {
@@ -87,7 +99,7 @@ class DomesticTour extends Model
 
     public function getFormattedHotelBalanceAttribute()
     {
-        return $this->hotel_balance ? number_format($this->hotel_balance, 2) : null;
+        return is_numeric($this->hotel_balance) ? number_format($this->hotel_balance, 2) : $this->hotel_balance;
     }
 
     public function getPaymentStatusDisplayAttribute()
