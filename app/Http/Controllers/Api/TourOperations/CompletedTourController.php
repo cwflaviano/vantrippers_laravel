@@ -13,7 +13,7 @@ class CompletedTourController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = CompletedTour::with(['customer', 'invoice']);
+            $query = CompletedTour::query();
 
             if ($request->has('assigned_team')) {
                 $query->byTeam($request->assigned_team);
@@ -75,16 +75,6 @@ class CompletedTourController extends Controller
                     'days' => $tour->days,
                     'pax' => $tour->pax,
                     'lead_guest' => $tour->lead_guest,
-                    'customer' => $tour->customer ? [
-                        'name' => $tour->customer->name,
-                        'email' => $tour->customer->email
-                    ] : null,
-                    'invoice' => $tour->invoice ? [
-                        'invoice_status' => $tour->invoice->invoice_status,
-                        'total_price' => $tour->invoice->total_price,
-                        'amount_due' => $tour->invoice->amount_due,
-                        'payment_received' => $tour->invoice->payment_received
-                    ] : null,
                     'created_at' => $tour->created_at,
                     'updated_at' => $tour->updated_at
                 ];
@@ -129,7 +119,11 @@ class CompletedTourController extends Controller
                 ], 422);
             }
 
-            $tour = CompletedTour::create($validator->validated());
+            // Get max ID and add 1 (id field doesn't have AUTO_INCREMENT)
+            $maxId = CompletedTour::max('id') ?? 0;
+            $data = array_merge(['id' => $maxId + 1], $validator->validated());
+            $tour = CompletedTour::create($data);
+            $tour = CompletedTour::find($data['id']);
 
             return response()->json([
                 'success' => true,
@@ -148,7 +142,7 @@ class CompletedTourController extends Controller
     public function show(string $id): JsonResponse
     {
         try {
-            $tour = CompletedTour::with(['customer', 'invoice'])->find($id);
+            $tour = CompletedTour::find($id);
 
             if (!$tour) {
                 return response()->json([
